@@ -6,11 +6,13 @@ This is a professional financial analysis presentation for NVIDIA Corporation, c
 
 ## Features
 
-- Professional slide-based presentation with smooth transitions
+- Professional slide-based presentation with smooth transitions and animations
 - Interactive navigation controls (keyboard and on-screen)
-- Data visualization with Chart.js
+- Advanced data visualization with Chart.js and ChartDataLabels plugin
+- Lazy-loaded charts that render when slides become visible
 - Responsive design for different screen sizes
-- Separated code structure (HTML, CSS, JS)
+- Separated code structure (HTML, CSS, JS) for better maintainability
+- Professional financial terminology and analysis
 
 ## File Structure
 
@@ -24,22 +26,24 @@ This is a professional financial analysis presentation for NVIDIA Corporation, c
 2. Navigate between slides using:
    - On-screen navigation buttons
    - Keyboard arrow keys (left/right)
-   - Touch swipe on mobile devices
+   - Touch swipe on mobile devices (for touch-enabled devices)
 
 ## Technical Details
 
 - Built with HTML5, CSS3, and JavaScript
-- Charts created with Chart.js library
+- Charts created with Chart.js library and ChartDataLabels plugin
+- Uses Intersection Observer API for lazy loading charts
 - Uses Inter font family for typography
-- Optimized for modern browsers
+- Optimized for modern browsers with CSS animations and transitions
+- Gradient backgrounds and professional color schemes
 
 ## Content Sections
 
-1. Introduction
-2. Balance Sheet Analysis
-3. Income Statement Analysis
-4. Cash Flow Statement Analysis
-5. Financial Performance Summary
+1. Introduction - Company Overview
+2. Balance Sheet Analysis - Assets and Cash Equivalents
+3. Income Statement Analysis - Revenue Growth
+4. Cash Flow Statement Analysis - Operating and Free Cash Flow
+5. Financial Performance Summary - Key Metrics and Future Outlook
 
 ## Requirements
 
@@ -50,3 +54,10 @@ This is a professional financial analysis presentation for NVIDIA Corporation, c
 
 - Presentation by: Diego Bravo and Leandro Navarrete
 - Course: ESP1318 - Oral Presentation
+
+## Optimization
+
+- Charts are only rendered when their respective slides become visible
+- CSS animations are optimized for performance
+- Responsive design works on various screen sizes
+- Professional typography and color schemes for financial presentations
