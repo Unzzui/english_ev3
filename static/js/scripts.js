@@ -1,13 +1,45 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Register Chart.js plugins
-    Chart.register(ChartDataLabels);
+    if (typeof ChartDataLabels !== 'undefined') {
+        Chart.register(ChartDataLabels);
+    }
     
     // Initialize slide functionality
     initializeSlides();
     
     // Create charts when slides are visible
     observeSlides();
+    
+    // Handle window resize to adjust charts
+    window.addEventListener('resize', function() {
+        adjustChartContainers();
+    });
+    
+    // Initial adjustment
+    adjustChartContainers();
 });
+
+// Adjust chart containers to fit in viewport without scrolling
+function adjustChartContainers() {
+    const slides = document.querySelectorAll('.slide');
+    
+    slides.forEach(slide => {
+        const slideHeight = slide.clientHeight;
+        const chartContainer = slide.querySelector('.chart-container');
+        
+        if (chartContainer) {
+            const slideContent = slide.getBoundingClientRect();
+            const availableHeight = slideHeight - (slideContent.top + 150);
+            
+            // Ensure chart container doesn't cause overflow
+            if (availableHeight > 200) { // Minimum height for charts
+                chartContainer.style.height = `${availableHeight}px`;
+            } else {
+                chartContainer.style.height = '40vh';
+            }
+        }
+    });
+}
 
 // Slide navigation functionality
 function initializeSlides() {
@@ -36,6 +68,11 @@ function initializeSlides() {
             targetSlide.classList.add('active');
             currentSlide = slideNumber;
             updateSlideCounter();
+            
+            // Adjust chart container when slide changes
+            setTimeout(() => {
+                adjustChartContainers();
+            }, 100);
         }
     }
     
@@ -111,6 +148,11 @@ function observeSlides() {
                         }
                         break;
                 }
+                
+                // Adjust chart container after chart creation
+                setTimeout(() => {
+                    adjustChartContainers();
+                }, 200);
             }
         });
     }, options);
@@ -159,7 +201,7 @@ function createCashGrowthChart() {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 2000,
+                duration: 1500,
                 easing: 'easeOutQuart'
             },
             scales: {
@@ -201,12 +243,7 @@ function createCashGrowthChart() {
             },
             plugins: {
                 legend: {
-                    labels: {
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        font: {
-                            size: 14
-                        }
-                    }
+                    display: false
                 },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -273,7 +310,7 @@ function createRevenueGrowthChart() {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 2000,
+                duration: 1500,
                 easing: 'easeOutQuart'
             },
             scales: {
@@ -315,12 +352,7 @@ function createRevenueGrowthChart() {
             },
             plugins: {
                 legend: {
-                    labels: {
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        font: {
-                            size: 14
-                        }
-                    }
+                    display: false
                 },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -369,7 +401,7 @@ function createCashFlowChart() {
             labels: ['2023', '2024', '2025', '2026 (Projected)'],
             datasets: [
                 {
-                    label: 'Operating Cash Flow (Billions USD)',
+                    label: 'Operating Cash Flow',
                     data: [58.0, 68.2, 80.5, 93.1],
                     backgroundColor: 'rgba(118, 185, 0, 0.8)',
                     borderColor: 'rgba(118, 185, 0, 1)',
@@ -379,7 +411,7 @@ function createCashFlowChart() {
                     hoverBorderColor: '#ffffff'
                 },
                 {
-                    label: 'Free Cash Flow (Billions USD)',
+                    label: 'Free Cash Flow',
                     data: [52.3, 60.9, 72.1, 82.7],
                     backgroundColor: 'rgba(0, 112, 192, 0.8)',
                     borderColor: 'rgba(0, 112, 192, 1)',
@@ -394,7 +426,7 @@ function createCashFlowChart() {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 2000,
+                duration: 1500,
                 easing: 'easeOutQuart'
             },
             scales: {
@@ -436,11 +468,15 @@ function createCashFlowChart() {
             },
             plugins: {
                 legend: {
+                    position: 'top',
+                    align: 'center',
                     labels: {
                         color: 'rgba(255, 255, 255, 0.8)',
                         font: {
-                            size: 14
-                        }
+                            size: 12
+                        },
+                        boxWidth: 12,
+                        padding: 15
                     }
                 },
                 tooltip: {
@@ -517,7 +553,7 @@ function createPerformanceSummaryChart() {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 2000,
+                duration: 1500,
                 easing: 'easeOutQuart'
             },
             scales: {
@@ -531,7 +567,7 @@ function createPerformanceSummaryChart() {
                     pointLabels: {
                         color: 'rgba(255, 255, 255, 0.8)',
                         font: {
-                            size: 14,
+                            size: 13,
                             weight: 'bold'
                         }
                     },
@@ -555,10 +591,10 @@ function createPerformanceSummaryChart() {
                     labels: {
                         color: 'rgba(255, 255, 255, 0.8)',
                         font: {
-                            size: 14
+                            size: 13
                         },
                         boxWidth: 15,
-                        padding: 20
+                        padding: 15
                     }
                 },
                 tooltip: {
