@@ -17,7 +17,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial adjustment
     adjustChartContainers();
+    
+    // Initialize remote control support
+    initializeRemoteControl();
 });
+
+// Global slide control variables
+let currentSlide = 1;
+let totalSlides = 0;
 
 // Adjust chart containers to fit in viewport without scrolling
 function adjustChartContainers() {
@@ -29,6 +36,7 @@ function adjustChartContainers() {
         
         if (chartContainer) {
             const slideContent = slide.getBoundingClientRect();
+            // Aumentado el padding inferior para evitar que los botones tapen el contenido
             const availableHeight = slideHeight - (slideContent.top + 150);
             
             // Ensure chart container doesn't cause overflow
@@ -41,71 +49,344 @@ function adjustChartContainers() {
     });
 }
 
+// Centralized slide navigation function
+function navigateToSlide(slideNumber) {
+    const slides = document.querySelectorAll('.slide');
+    
+    if (slideNumber < 1 || slideNumber > totalSlides) {
+        return false; // Invalid slide number
+    }
+    
+    slides.forEach(slide => {
+        slide.classList.remove('active');
+    });
+    
+    const targetSlide = document.querySelector(`.slide[data-slide="${slideNumber}"]`);
+    if (targetSlide) {
+        targetSlide.classList.add('active');
+        currentSlide = slideNumber;
+        updateSlideCounter();
+        
+        // Adjust chart container when slide changes
+        setTimeout(() => {
+            adjustChartContainers();
+        }, 100);
+        
+        return true;
+    }
+    return false;
+}
+
+// Navigate to next slide
+function nextSlide() {
+    if (currentSlide < totalSlides) {
+        navigateToSlide(currentSlide + 1);
+        return true;
+    }
+    return false;
+}
+
+// Navigate to previous slide
+function previousSlide() {
+    if (currentSlide > 1) {
+        navigateToSlide(currentSlide - 1);
+        return true;
+    }
+    return false;
+}
+
+// Update slide counter
+function updateSlideCounter() {
+    const slideCounter = document.getElementById('slideCounter');
+    if (slideCounter) {
+        slideCounter.textContent = `${currentSlide} / ${totalSlides}`;
+    }
+}
+
 // Slide navigation functionality
 function initializeSlides() {
     const slides = document.querySelectorAll('.slide');
-    const totalSlides = slides.length;
-    let currentSlide = 1;
+    totalSlides = slides.length;
     
     // Navigation buttons
     const prevButton = document.getElementById('prevSlide');
     const nextButton = document.getElementById('nextSlide');
-    const slideCounter = document.getElementById('slideCounter');
     
-    // Update slide counter
-    function updateSlideCounter() {
-        slideCounter.textContent = `${currentSlide} / ${totalSlides}`;
-    }
-    
-    // Show specific slide
-    function showSlide(slideNumber) {
-        slides.forEach(slide => {
-            slide.classList.remove('active');
+    // Previous slide button
+    if (prevButton) {
+        prevButton.addEventListener('click', function() {
+            previousSlide();
         });
-        
-        const targetSlide = document.querySelector(`.slide[data-slide="${slideNumber}"]`);
-        if (targetSlide) {
-            targetSlide.classList.add('active');
-            currentSlide = slideNumber;
-            updateSlideCounter();
-            
-            // Adjust chart container when slide changes
-            setTimeout(() => {
-                adjustChartContainers();
-            }, 100);
-        }
     }
     
-    // Previous slide
-    prevButton.addEventListener('click', function() {
-        if (currentSlide > 1) {
-            showSlide(currentSlide - 1);
-        }
-    });
-    
-    // Next slide
-    nextButton.addEventListener('click', function() {
-        if (currentSlide < totalSlides) {
-            showSlide(currentSlide + 1);
-        }
-    });
+    // Next slide button
+    if (nextButton) {
+        nextButton.addEventListener('click', function() {
+            nextSlide();
+        });
+    }
     
     // Keyboard navigation
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowLeft') {
-            if (currentSlide > 1) {
-                showSlide(currentSlide - 1);
-            }
-        } else if (e.key === 'ArrowRight') {
-            if (currentSlide < totalSlides) {
-                showSlide(currentSlide + 1);
-            }
-        }
+        handleKeyboardInput(e);
     });
     
     // Initialize counter
     updateSlideCounter();
 }
+
+// Handle keyboard input (including remote control keys)
+function handleKeyboardInput(e) {
+    // Prevent default behavior for navigation keys
+    const navigationKeys = [
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+        'PageUp', 'PageDown', 'Home', 'End',
+        'Space', 'Enter', 'Escape'
+    ];
+    
+    if (navigationKeys.includes(e.key)) {
+        e.preventDefault();
+    }
+    
+    // Flag to track if we handled the event
+    let handled = false;
+    
+    // Handle modern key events first
+    switch(e.key) {
+        // Standard arrow keys
+        case 'ArrowLeft':
+        case 'ArrowUp':
+        case 'PageUp':
+            previousSlide();
+            handled = true;
+            break;
+            
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case 'PageDown':
+        case 'Space':
+            nextSlide();
+            handled = true;
+            break;
+            
+        // Home/End keys
+        case 'Home':
+            navigateToSlide(1);
+            handled = true;
+            break;
+            
+        case 'End':
+            navigateToSlide(totalSlides);
+            handled = true;
+            break;
+            
+        // Number keys for direct navigation
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            const slideNum = parseInt(e.key);
+            if (slideNum <= totalSlides) {
+                navigateToSlide(slideNum);
+            }
+            handled = true;
+            break;
+            
+        // Remote control specific keys
+        case 'MediaTrackNext':
+        case 'MediaPlayPause':
+            nextSlide();
+            handled = true;
+            break;
+            
+        case 'MediaTrackPrevious':
+            previousSlide();
+            handled = true;
+            break;
+            
+        // TV Remote keys (some browsers support these)
+        case 'ChannelUp':
+            nextSlide();
+            handled = true;
+            break;
+            
+        case 'ChannelDown':
+            previousSlide();
+            handled = true;
+            break;
+    }
+    
+    // Only handle keyCode events if the modern key event wasn't handled
+    // This is for older browsers or specific remote controls
+    if (!handled) {
+        switch(e.keyCode) {
+            case 37: // Left arrow
+            case 38: // Up arrow
+            case 33: // Page Up
+                previousSlide();
+                break;
+                
+            case 39: // Right arrow
+            case 40: // Down arrow
+            case 34: // Page Down
+            case 32: // Space
+                nextSlide();
+                break;
+                
+            case 36: // Home
+                navigateToSlide(1);
+                break;
+                
+            case 35: // End
+                navigateToSlide(totalSlides);
+                break;
+                
+            // Number keys (48-57 are 0-9)
+            case 49: case 50: case 51: case 52: case 53:
+            case 54: case 55: case 56: case 57:
+                const slideNumber = e.keyCode - 48;
+                if (slideNumber <= totalSlides) {
+                    navigateToSlide(slideNumber);
+                }
+                break;
+        }
+    }
+}
+
+// Initialize remote control support
+function initializeRemoteControl() {
+    // Gamepad API support for game controllers and some remote controls
+    let gamepadIndex = -1;
+    
+    window.addEventListener('gamepadconnected', function(e) {
+        console.log('Gamepad/Remote connected:', e.gamepad.id);
+        gamepadIndex = e.gamepad.index;
+        startGamepadPolling();
+    });
+    
+    window.addEventListener('gamepaddisconnected', function(e) {
+        console.log('Gamepad/Remote disconnected');
+        gamepadIndex = -1;
+    });
+    
+    // Gamepad polling function
+    let lastButtonStates = {};
+    
+    function startGamepadPolling() {
+        function pollGamepad() {
+            if (gamepadIndex === -1) return;
+            
+            const gamepad = navigator.getGamepads()[gamepadIndex];
+            if (!gamepad) return;
+            
+            // Check D-pad and buttons
+            const buttons = gamepad.buttons;
+            
+            // D-pad left (button 14) or left stick left
+            if ((buttons[14] && buttons[14].pressed && !lastButtonStates[14]) || 
+                (gamepad.axes[0] < -0.5 && !lastButtonStates['axisLeft'])) {
+                previousSlide();
+                lastButtonStates[14] = true;
+                lastButtonStates['axisLeft'] = true;
+            } else if ((!buttons[14] || !buttons[14].pressed) && gamepad.axes[0] > -0.5) {
+                lastButtonStates[14] = false;
+                lastButtonStates['axisLeft'] = false;
+            }
+            
+            // D-pad right (button 15) or left stick right
+            if ((buttons[15] && buttons[15].pressed && !lastButtonStates[15]) || 
+                (gamepad.axes[0] > 0.5 && !lastButtonStates['axisRight'])) {
+                nextSlide();
+                lastButtonStates[15] = true;
+                lastButtonStates['axisRight'] = true;
+            } else if ((!buttons[15] || !buttons[15].pressed) && gamepad.axes[0] < 0.5) {
+                lastButtonStates[15] = false;
+                lastButtonStates['axisRight'] = false;
+            }
+            
+            // A button (button 0) for next
+            if (buttons[0] && buttons[0].pressed && !lastButtonStates[0]) {
+                nextSlide();
+                lastButtonStates[0] = true;
+            } else if (!buttons[0] || !buttons[0].pressed) {
+                lastButtonStates[0] = false;
+            }
+            
+            // B button (button 1) for previous
+            if (buttons[1] && buttons[1].pressed && !lastButtonStates[1]) {
+                previousSlide();
+                lastButtonStates[1] = true;
+            } else if (!buttons[1] || !buttons[1].pressed) {
+                lastButtonStates[1] = false;
+            }
+            
+            requestAnimationFrame(pollGamepad);
+        }
+        
+        pollGamepad();
+    }
+    
+    // Touch/swipe support for touch-enabled remote controls
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchend', function(e) {
+        if (!touchStartX || !touchStartY) return;
+        
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        
+        // Minimum swipe distance
+        const minSwipeDistance = 50;
+        
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+            if (deltaX > 0) {
+                // Swipe right - previous slide
+                previousSlide();
+            } else {
+                // Swipe left - next slide
+                nextSlide();
+            }
+        }
+        
+        touchStartX = 0;
+        touchStartY = 0;
+    }, { passive: true });
+    
+    // Focus management for better remote control support
+    document.addEventListener('focus', function() {
+        // Ensure the document can receive key events
+        if (document.activeElement === document.body) {
+            document.body.focus();
+        }
+    });
+    
+    // Make sure the document can receive focus
+    document.body.setAttribute('tabindex', '-1');
+    document.body.focus();
+}
+
+// Expose navigation functions globally for external control
+window.presentationControl = {
+    nextSlide: nextSlide,
+    previousSlide: previousSlide,
+    goToSlide: navigateToSlide,
+    getCurrentSlide: () => currentSlide,
+    getTotalSlides: () => totalSlides
+};
 
 // Observe slides for visibility and create charts when visible
 function observeSlides() {
